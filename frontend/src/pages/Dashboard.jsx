@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react'
+import { Wallet, TrendingUp, TrendingDown } from 'lucide-react'
 import {
   BarChart,
   Bar,
@@ -10,277 +11,271 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts";
-import api from "../api/axios";
-import TransactionForm from "../components/TransactionForm";
-import Layout from "../components/Layout";
-import { Wallet, TrendingUp, TrendingDown } from "lucide-react";
-import StatCard from "../components/StatCard";
-import Card from "../components/ui/Card";
-import RecentTransactions from "../components/RecentTransactions";
+} from 'recharts'
+import api from '../api/axios'
+import Layout from '../components/Layout'
+import Card from '../components/ui/Card'
+import StatCard from '../components/StatCard'
+import RecentTransactions from '../components/RecentTransactions'
 
 function Dashboard() {
-  const [transactions, setTransactions] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [transactions, setTransactions] = useState([])
+  const [summary, setSummary] = useState(null)
+  const [error, setError] = useState('')
 
-  const [categoryId, setCategoryId] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState(null);
-
-  const [summary, setSummary] = useState(null);
-
+  // Load transactions and monthly summary
   useEffect(() => {
-    const fetchCategories = async () => {
-      const response = await api.get("/categories");
-      setCategories(response.data);
-    };
+    const loadData = async () => {
+      try {
+        const [transactionsRes, summaryRes] = await Promise.all([
+          api.get('/transactions'),
+          api.get('/transactions/summary'),
+        ])
 
-    fetchCategories();
-  }, []);
-
-  const fetchTransactions = async () => {
-    setLoading(true);
-    setError("");
-
-    const params = {};
-    if (categoryId) params.category_id = categoryId;
-    if (startDate) params.start_date = startDate;
-    if (endDate) params.end_date = endDate;
-
-    try {
-      const response = await api.get("/transactions", { params });
-      setTransactions(response.data);
-    } catch (err) {
-      setError("Failed to load transactions");
-    } finally {
-      setLoading(false);
+        setTransactions(transactionsRes.data)
+        setSummary(summaryRes.data)
+      } catch (err) {
+        console.error(err)
+        setError('Failed to load dashboard data')
+      }
     }
-  };
 
-  const fetchSummary = async () => {
-    const response = await api.get("/transactions/summary");
-    setSummary(response.data);
-  };
+    loadData()
+  }, [])
 
-  useEffect(() => {
-    fetchTransactions();
-    fetchSummary();
-  }, []);
-
-  const handleFilter = (e) => {
-    e.preventDefault();
-    fetchTransactions();
-  };
-
-  const handleAdd = async (data) => {
-    await api.post("/transactions", data);
-    setShowAddForm(false);
-    fetchTransactions();
-  };
-
-  const handleEdit = (transaction) => {
-    setEditingTransaction(transaction);
-    setShowAddForm(false);
-  };
-
-  const handleUpdate = async (data) => {
-    await api.put(`/transactions/${editingTransaction.id}`, data);
-    setEditingTransaction(null);
-    fetchTransactions();
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this transaction?")) return;
-    await api.delete(`/transactions/${id}`);
-    fetchTransactions();
-  };
-
+  // Get the expenses for the month returned by the summary API
   const getCategoryBreakdown = () => {
-    const expenseTotals = {};
+    if (!summary) return []
+
+    const prefix = `${summary.year}-${String(summary.month).padStart(2, '0')}`
+
+    const expenseTotals = {}
 
     transactions
-      .filter((t) => t.type === "expense")
-      .forEach((t) => {
-        const name = t.category?.name || "Uncategorized";
-        expenseTotals[name] = (expenseTotals[name] || 0) + parseFloat(t.amount);
-      });
+      .filter(
+        (transaction) =>
+          transaction.type === 'expense' &&
+          transaction.date.startsWith(prefix)
+      )
+      .forEach((transaction) => {
+        const name = transaction.category?.name || 'Uncategorized'
+
+        expenseTotals[name] =
+          (expenseTotals[name] || 0) + parseFloat(transaction.amount)
+      })
 
     return Object.entries(expenseTotals).map(([name, value]) => ({
       name,
       value,
-    }));
-  };
+    }))
+  }
+
+  const breakdown = getCategoryBreakdown()
+
+  // Format month/year
+  const getSummaryMonth = () => {
+    if (!summary) return ''
+
+    return new Date(
+      summary.year,
+      summary.month - 1
+    ).toLocaleString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    })
+  }
+
+  const summaryMonth = getSummaryMonth()
 
   return (
     <Layout title="Dashboard">
-      {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <StatCard
-            title="Balance"
-            value={`₱${summary.net.toLocaleString()}`}
-            icon={Wallet}
-            iconBg="bg-blue-100"
-            iconColor="text-blue-600"
-          />
-          <StatCard
-            title="Total Income"
-            value={`₱${summary.income.toLocaleString()}`}
-            icon={TrendingUp}
-            iconBg="bg-green-100"
-            iconColor="text-green-600"
-          />
-          <StatCard
-            title="Total Expenses"
-            value={`₱${summary.expense.toLocaleString()}`}
-            icon={TrendingDown}
-            iconBg="bg-red-100"
-            iconColor="text-red-600"
-          />
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm font-medium text-red-600">
+            {error}
+          </p>
         </div>
       )}
 
+      {/* Monthly Summary */}
       {summary && (
-        <Card className="mb-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">
+        <>
+          {/* Month Indicator */}
+          <div className="mb-4">
+            <p className="text-sm text-slate-500">
+              Showing financial summary for{' '}
+              <span className="font-semibold text-emerald-600">
+                {summaryMonth}
+              </span>
+            </p>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-3">
+
+            {/* Monthly Balance */}
+            <StatCard
+              title="Monthly Balance"
+              value={`₱${summary.net.toLocaleString()}`}
+              icon={Wallet}
+              iconBg="bg-emerald-100"
+              iconColor="text-emerald-600"
+            />
+
+            {/* Monthly Income */}
+            <StatCard
+              title="Total Income"
+              value={`₱${summary.income.toLocaleString()}`}
+              icon={TrendingUp}
+              iconBg="bg-green-100"
+              iconColor="text-green-600"
+            />
+
+            {/* Monthly Expenses */}
+            <StatCard
+              title="Total Expenses"
+              value={`₱${summary.expense.toLocaleString()}`}
+              icon={TrendingDown}
+              iconBg="bg-red-100"
+              iconColor="text-red-600"
+            />
+
+          </div>
+        </>
+      )}
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 gap-6 mb-6 lg:grid-cols-2">
+
+        {/* Income vs Expenses */}
+        <Card>
+          <h3 className="text-lg font-semibold text-slate-900">
             Income vs Expenses
           </h3>
-          <div style={{ width: "100%", height: "250px" }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={[
-                  { name: "Income", amount: summary.income },
-                  { name: "Expense", amount: summary.expense },
-                ]}
-              >
-                <XAxis dataKey="name" stroke="#94A3B8" />
-                <YAxis stroke="#94A3B8" />
-                <Tooltip />
-                <Bar dataKey="amount" fill="#059669" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      )}
 
-      <Card className="mb-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">
-          Expenses by Category
-        </h3>
-        <div style={{ width: "100%", height: "300px" }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={getCategoryBreakdown()}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={60}
-                outerRadius={100}
-                label
-              >
-                {getCategoryBreakdown().map((entry, index) => (
-                  <Cell
-                    key={entry.name}
-                    fill={
-                      ["#059669", "#0EA5E9", "#F59E0B", "#DC2626", "#8B5CF6"][
-                        index % 5
-                      ]
+          {summary && (
+            <p className="mt-1 mb-4 text-sm text-slate-500">
+              {summaryMonth}
+            </p>
+          )}
+
+          {summary && (
+            <div style={{ width: '100%', height: '250px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={[
+                    {
+                      name: 'Income',
+                      amount: summary.income,
+                    },
+                    {
+                      name: 'Expense',
+                      amount: summary.expense,
+                    },
+                  ]}
+                >
+                  <XAxis
+                    dataKey="name"
+                    stroke="#94A3B8"
+                  />
+
+                  <YAxis
+                    stroke="#94A3B8"
+                  />
+
+                  <Tooltip
+                    formatter={(value) =>
+                      `₱${Number(value).toLocaleString()}`
                     }
                   />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
-      <RecentTransactions transactions={transactions} />
 
-      <form onSubmit={handleFilter}>
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-        >
-          <option value="">All categories</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+                  <Bar
+                    dataKey="amount"
+                    radius={[6, 6, 0, 0]}
+                  >
+                    {/* Income */}
+                    <Cell fill="#16A34A" />
 
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
+                    {/* Expense */}
+                    <Cell fill="#DC2626" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </Card>
 
-        <button type="submit">Filter</button>
-      </form>
+        {/* Expenses by Category */}
+        <Card>
+          <h3 className="text-lg font-semibold text-slate-900">
+            Expenses by Category
+          </h3>
 
-      {!showAddForm && !editingTransaction && (
-        <button onClick={() => setShowAddForm(true)}>Add Transaction</button>
-      )}
+          {summary && (
+            <p className="mt-1 mb-4 text-sm text-slate-500">
+              {summaryMonth}
+            </p>
+          )}
 
-      {showAddForm && (
-        <TransactionForm
-          categories={categories}
-          onSubmit={handleAdd}
-          onCancel={() => setShowAddForm(false)}
-        />
-      )}
+          {breakdown.length === 0 ? (
+            <p className="text-sm text-slate-500">
+              No expenses recorded this month.
+            </p>
+          ) : (
+            <div style={{ width: '100%', height: '250px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
 
-      {editingTransaction && (
-        <TransactionForm
-          categories={categories}
-          initialData={editingTransaction}
-          onSubmit={handleUpdate}
-          onCancel={() => setEditingTransaction(null)}
-        />
-      )}
+                  <Pie
+                    data={breakdown}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={2}
+                  >
+                    {breakdown.map((entry, index) => (
+                      <Cell
+                        key={entry.name}
+                        fill={
+                          [
+                            '#059669', // Emerald
+                            '#10B981', // Green
+                            '#34D399', // Light green
+                            '#F59E0B', // Amber
+                            '#DC2626', // Red
+                            '#047857', // Dark emerald
+                          ][index % 6]
+                        }
+                      />
+                    ))}
+                  </Pie>
 
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+                  <Tooltip
+                    formatter={(value) =>
+                      `₱${Number(value).toLocaleString()}`
+                    }
+                  />
 
-      <table border="1" cellPadding="8">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Category</th>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Description</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactions.map((t) => (
-            <tr key={t.id}>
-              <td>{t.date}</td>
-              <td>{t.category?.name}</td>
-              <td>{t.type}</td>
-              <td>{t.amount}</td>
-              <td>{t.description}</td>
-              <td>
-                <button onClick={() => handleEdit(t)}>Edit</button>
-                <button onClick={() => handleDelete(t.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                  <Legend />
+
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </Card>
+
+      </div>
+
+      {/* Recent Transactions */}
+      <RecentTransactions
+        transactions={transactions}
+      />
+
     </Layout>
-  );
+  )
 }
 
-export default Dashboard;
+export default Dashboard

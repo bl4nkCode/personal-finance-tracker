@@ -1,4 +1,9 @@
 import { useState, useEffect } from 'react'
+import Input from './ui/Input'
+import Button from './ui/Button'
+
+const fieldClasses =
+  'w-full rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none'
 
 function TransactionForm({ categories, initialData, onSubmit, onCancel }) {
   const [categoryId, setCategoryId] = useState('')
@@ -43,52 +48,93 @@ function TransactionForm({ categories, initialData, onSubmit, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm font-medium text-red-600">{error}</p>
+        </div>
+      )}
 
-      <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
-        <option value="">Select category</option>
-        {categories.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setType('expense')}
+            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+              type === 'expense'
+                ? 'border-red-600 bg-red-50 text-red-700'
+                : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            Expense
+          </button>
+          <button
+            type="button"
+            onClick={() => setType('income')}
+            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+              type === 'income'
+                ? 'border-green-600 bg-green-50 text-green-700'
+                : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            Income
+          </button>
+        </div>
+      </div>
 
-      <select value={type} onChange={(e) => setType(e.target.value)}>
-        <option value="expense">Expense</option>
-        <option value="income">Income</option>
-      </select>
-
-      <input
+      <Input
+        label="Amount (₱)"
         type="number"
         step="0.01"
-        placeholder="Amount"
+        min="0.01"
+        placeholder="0.00"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         required
       />
 
-      <input
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+        <select
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          className={fieldClasses}
+          required
+        >
+          <option value="">Select category</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <Input
+        label="Description"
         type="text"
-        placeholder="Description"
+        placeholder="e.g. Grocery shopping"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
 
-      <input
+      <Input
+        label="Date"
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
         required
       />
 
-      <button type="submit" disabled={saving}>
-        {saving ? 'Saving...' : 'Save'}
-      </button>
-      <button type="button" onClick={onCancel}>
-        Cancel
-      </button>
+      <div className="flex justify-end gap-3 pt-2">
+        <Button type="button" variant="secondary" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={saving}>
+          {saving ? 'Saving...' : initialData ? 'Save Changes' : 'Add Transaction'}
+        </Button>
+      </div>
     </form>
   )
 }
