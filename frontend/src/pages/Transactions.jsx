@@ -9,6 +9,7 @@ import Badge from "../components/ui/Badge";
 import Input from "../components/ui/Input";
 import Modal from "../components/ui/Modal";
 import EmptyState from "../components/EmptyState";
+import { useToast } from "../context/ToastContext";
 
 const fieldClasses =
   "w-full rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none";
@@ -28,6 +29,8 @@ function Transactions() {
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [deletingTransaction, setDeletingTransaction] = useState(null);
   const [deleting, setDeleting] = useState(false);
+
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -80,12 +83,14 @@ function Transactions() {
     await api.post("/transactions", data);
     setShowAddModal(false);
     fetchTransactions();
+    showToast("Transaction added successfully.");
   };
 
   const handleUpdate = async (data) => {
     await api.put(`/transactions/${editingTransaction.id}`, data);
     setEditingTransaction(null);
     fetchTransactions();
+    showToast("Transaction updated successfully.");
   };
 
   const handleDelete = async () => {
@@ -94,8 +99,9 @@ function Transactions() {
     try {
       await api.delete(`/transactions/${deletingTransaction.id}`);
       fetchTransactions();
+      showToast("Transaction deleted.");
     } catch (err) {
-      setError("Failed to delete transaction");
+      showToast("Unable to delete transaction.", "error");
     } finally {
       setDeleting(false);
       setDeletingTransaction(null);

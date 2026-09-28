@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { Wallet } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
@@ -36,121 +37,150 @@ function Register() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-50 px-4 flex items-center justify-center py-10">
+    <div className="relative min-h-screen overflow-hidden bg-slate-50 px-4">
 
-      {/* Background decorative circles */}
-      <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-emerald-100/60 blur-3xl" />
-      <div className="absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-green-100/70 blur-3xl" />
+      {/* Background decoration */}
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-emerald-50/70 blur-3xl" />
 
-      <div className="relative w-full max-w-md">
+      <div className="relative flex min-h-screen items-center justify-center py-10">
 
-        {/* Main Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/50">
+        <div className="w-full max-w-md">
 
-          {/* Logo / Brand */}
+          {/* Brand */}
           <div className="mb-8 flex flex-col items-center">
 
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-200">
-              <span className="text-2xl font-bold text-white">₱</span>
-            </div>
+            <Link to="/" className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600 shadow-lg shadow-emerald-600/20">
+                <Wallet className="h-5 w-5 text-white" />
+              </div>
 
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Finance <span className="text-emerald-600">Manager</span>
-            </h1>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                Finance{' '}
+                <span className="text-emerald-600">
+                  Manager
+                </span>
+              </h1>
+            </Link>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-3 text-sm text-slate-500">
               Manage your money with confidence
             </p>
+
           </div>
 
-          {/* Heading */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-slate-900">
-              Create an account
-            </h2>
+          {/* Register Card */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-xl shadow-slate-200/50 sm:p-8">
 
-            <p className="mt-1 text-sm text-slate-500">
-              Start tracking your finances today.
-            </p>
-          </div>
+            {/* Header */}
+            <div className="mb-7">
 
-          {/* Error */}
-          {error && (
-            <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-              <p className="text-sm font-medium text-red-600">
-                {error}
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+                Create an account
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Start tracking your finances today.
               </p>
+
             </div>
-          )}
 
-          {/* Registration Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Error */}
+            {error && (
+              <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                <p className="text-sm font-medium text-red-600">
+                  {error}
+                </p>
+              </div>
+            )}
 
-            <Input
-              label="Name"
-              type="text"
-              placeholder="Enter your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-
-            <Input
-              label="Email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-
-            <Input
-              label="Password"
-              type="password"
-              placeholder="••••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-
-            <Input
-              label="Confirm Password"
-              type="password"
-              placeholder="••••••••••"
-              value={passwordConfirmation}
-              onChange={(e) => setPasswordConfirmation(e.target.value)}
-              required
-            />
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full !bg-emerald-600 !text-white hover:!bg-emerald-700 focus:!ring-emerald-500"
+            {/* Registration Form */}
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5"
             >
-              {loading ? 'Registering...' : 'Create Account'}
-            </Button>
 
-          </form>
+              <Input
+                label="Name"
+                type="text"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
 
-          {/* Login */}
-          <div className="mt-7 border-t border-slate-100 pt-6 text-center">
-            <p className="text-sm text-slate-500">
-              Already have an account?{' '}
-              <Link
-                to="/login"
-                className="font-semibold text-emerald-600 transition-colors hover:text-emerald-700 hover:underline"
+              <Input
+                label="Email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+
+              <Input
+                label="Password"
+                type="password"
+                placeholder="••••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+
+              <Input
+                label="Confirm Password"
+                type="password"
+                placeholder="••••••••••"
+                value={passwordConfirmation}
+                onChange={(e) => setPasswordConfirmation(e.target.value)}
+                required
+              />
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full"
               >
-                Sign in
-              </Link>
-            </p>
+                {loading ? 'Registering...' : 'Create Account'}
+              </Button>
+
+            </form>
+
+            {/* Login */}
+            <div className="mt-7 border-t border-slate-100 pt-6 text-center">
+
+              <p className="text-sm text-slate-500">
+                Already have an account?{' '}
+
+                <Link
+                  to="/login"
+                  className="font-semibold text-emerald-600 transition-colors hover:text-emerald-700 hover:underline"
+                >
+                  Sign in
+                </Link>
+              </p>
+
+            </div>
+
           </div>
+
+          {/* Back to Home */}
+          <div className="mt-5 text-center">
+
+            <Link
+              to="/"
+              className="text-sm font-medium text-slate-500 transition-colors hover:text-emerald-600"
+            >
+              ← Back to home
+            </Link>
+
+          </div>
+
+          {/* Footer */}
+          <p className="mt-6 text-center text-xs text-slate-400">
+            © 2026 Finance Manager. Track smarter. Spend better.
+          </p>
 
         </div>
-
-        {/* Footer */}
-        <p className="mt-6 text-center text-xs text-slate-400">
-          © 2026 Finance Manager. Track smarter. Spend better.
-        </p>
 
       </div>
     </div>

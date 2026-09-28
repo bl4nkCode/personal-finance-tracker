@@ -1,73 +1,81 @@
-import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, Tag } from 'lucide-react'
-import api from '../api/axios'
-import Layout from '../components/Layout'
-import CategoryForm from '../components/CategoryForm'
-import EmptyState from '../components/EmptyState'
-import Button from '../components/ui/Button'
-import Badge from '../components/ui/Badge'
-import Modal from '../components/ui/Modal'
+import { useState, useEffect } from "react";
+import { Plus, Pencil, Trash2, Tag } from "lucide-react";
+import api from "../api/axios";
+import Layout from "../components/Layout";
+import CategoryForm from "../components/CategoryForm";
+import EmptyState from "../components/EmptyState";
+import Button from "../components/ui/Button";
+import Badge from "../components/ui/Badge";
+import Modal from "../components/ui/Modal";
+import { useToast } from "../context/ToastContext";
 
 function Categories() {
-  const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [editingCategory, setEditingCategory] = useState(null)
-  const [deletingCategory, setDeletingCategory] = useState(null)
-  const [deleteError, setDeleteError] = useState('')
-  const [deleting, setDeleting] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [deletingCategory, setDeletingCategory] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const { showToast } = useToast();
 
   const fetchCategories = async () => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
 
     try {
-      const response = await api.get('/categories')
-      setCategories(response.data)
+      const response = await api.get("/categories");
+      setCategories(response.data);
     } catch (err) {
-      setError('Failed to load categories')
+      setError("Failed to load categories");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchCategories()
-  }, [])
+    fetchCategories();
+  }, []);
 
   const handleAdd = async (data) => {
-    await api.post('/categories', data)
-    setShowAddModal(false)
-    fetchCategories()
-  }
+    await api.post("/categories", data);
+    setShowAddModal(false);
+    fetchCategories();
+    showToast("Category added successfully.");
+  };
 
   const handleUpdate = async (data) => {
-    await api.put(`/categories/${editingCategory.id}`, data)
-    setEditingCategory(null)
-    fetchCategories()
-  }
+    await api.put(`/categories/${editingCategory.id}`, data);
+    setEditingCategory(null);
+    fetchCategories();
+    showToast("Category updated successfully.");
+  };
 
   const openDelete = (category) => {
-    setDeleteError('')
-    setDeletingCategory(category)
-  }
+    setDeleteError("");
+    setDeletingCategory(category);
+  };
 
   const handleDelete = async () => {
-    setDeleting(true)
-    setDeleteError('')
+    setDeleting(true);
+    setDeleteError("");
 
     try {
-      await api.delete(`/categories/${deletingCategory.id}`)
-      setDeletingCategory(null)
-      fetchCategories()
+      await api.delete(`/categories/${deletingCategory.id}`);
+      setDeletingCategory(null);
+      fetchCategories();
+      showToast("Category deleted.");
     } catch (err) {
-      setDeleteError(err.response?.data?.message || 'Failed to delete category')
+      setDeleteError(
+        err.response?.data?.message || "Failed to delete category",
+      );
     } finally {
-      setDeleting(false)
+      setDeleting(false);
     }
-  }
+  };
 
   return (
     <Layout title="Categories">
@@ -79,7 +87,10 @@ function Categories() {
           </p>
         </div>
 
-        <Button className="flex items-center gap-2" onClick={() => setShowAddModal(true)}>
+        <Button
+          className="flex items-center gap-2"
+          onClick={() => setShowAddModal(true)}
+        >
           <Plus className="w-4 h-4" />
           Add Category
         </Button>
@@ -97,7 +108,10 @@ function Categories() {
           title="No categories yet"
           description="Create your first category to start organizing your transactions."
           action={
-            <Button className="flex items-center gap-2" onClick={() => setShowAddModal(true)}>
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setShowAddModal(true)}
+            >
               <Plus className="w-4 h-4" />
               Add Category
             </Button>
@@ -108,7 +122,10 @@ function Categories() {
           <ul className="divide-y divide-slate-100">
             {loading &&
               [...Array(4)].map((_, i) => (
-                <li key={i} className="flex items-center justify-between px-6 py-4 animate-pulse">
+                <li
+                  key={i}
+                  className="flex items-center justify-between px-6 py-4 animate-pulse"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-slate-200" />
                     <div className="h-4 w-32 rounded bg-slate-200" />
@@ -126,12 +143,14 @@ function Categories() {
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-9 h-9 rounded-full flex items-center justify-center ${
-                        c.type === 'income' ? 'bg-green-100' : 'bg-red-100'
+                        c.type === "income" ? "bg-green-100" : "bg-red-100"
                       }`}
                     >
                       <Tag
                         className={`w-4 h-4 ${
-                          c.type === 'income' ? 'text-green-600' : 'text-red-600'
+                          c.type === "income"
+                            ? "text-green-600"
+                            : "text-red-600"
                         }`}
                       />
                     </div>
@@ -168,7 +187,10 @@ function Categories() {
         onClose={() => setShowAddModal(false)}
         title="Add Category"
       >
-        <CategoryForm onSubmit={handleAdd} onCancel={() => setShowAddModal(false)} />
+        <CategoryForm
+          onSubmit={handleAdd}
+          onCancel={() => setShowAddModal(false)}
+        />
       </Modal>
 
       <Modal
@@ -194,24 +216,24 @@ function Categories() {
           </div>
         ) : (
           <p className="text-sm text-slate-500 mb-6">
-            This will permanently delete the category "{deletingCategory?.name}". This
-            can't be undone.
+            This will permanently delete the category "{deletingCategory?.name}
+            ". This can't be undone.
           </p>
         )}
 
         <div className="flex justify-end gap-3">
           <Button variant="secondary" onClick={() => setDeletingCategory(null)}>
-            {deleteError ? 'Close' : 'Cancel'}
+            {deleteError ? "Close" : "Cancel"}
           </Button>
           {!deleteError && (
             <Button variant="danger" onClick={handleDelete} disabled={deleting}>
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleting ? "Deleting..." : "Delete"}
             </Button>
           )}
         </div>
       </Modal>
     </Layout>
-  )
+  );
 }
 
-export default Categories
+export default Categories;
