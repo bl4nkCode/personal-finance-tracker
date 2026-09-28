@@ -1,8 +1,8 @@
-import { Bell, User } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+import { Bell, User } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 function Header({ title }) {
-  const { user } = useAuth()
+  const { user } = useAuth();
 
   return (
     <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
@@ -14,14 +14,16 @@ function Header({ title }) {
         </button>
 
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-            <User className="w-4 h-4 text-blue-600" />
+          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+            <User className="w-4 h-4 text-emerald-600" />
           </div>
-          <span className="text-sm font-medium text-slate-700">{user?.name}</span>
+          <span className="text-sm font-medium text-slate-700">
+            {user?.name}
+          </span>
         </div>
       </div>
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;
