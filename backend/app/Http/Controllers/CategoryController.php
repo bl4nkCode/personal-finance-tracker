@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use App\Models\Transaction;
 
 class CategoryController extends Controller
 {
@@ -60,6 +61,14 @@ class CategoryController extends Controller
     {
         if ($category->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Not found'], 404);
+        }
+
+        $count = Transaction::where('category_id', $category->id)->count();
+
+        if ($count > 0) {
+            return response()->json([
+                'message' => "This category has {$count} transaction(s), so it can't be deleted. Move or delete those transactions first.",
+            ], 409);
         }
 
         $category->delete();
